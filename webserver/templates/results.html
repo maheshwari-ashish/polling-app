@@ -1,0 +1,42 @@
+<html>
+    <style>
+        body {
+        font-size: 15pt;
+        font-family: arial;
+        }
+    </style>
+
+<body>
+    <u><h3>Poll Results</h3></u>
+    <h4>Enter a poll id to view it's results:</h4>
+    <form method="POST" action="/poll_results">
+        <p>Poll id: <input type="text" name="poll_id"></p>
+        <p><input type="submit" value="Submit"></p>
+    </form>
+
+    {% if votes_data|length == 0 %}
+        {% if votes_cols|length > 0 %}
+            <h4>This poll has not been voted on!</h4>
+        {% endif %}
+    {% else %}
+        <h4>Votes for selected poll are:</h4>
+        <table>
+            <tr>
+                {% for col in votes_cols %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for row in votes_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+</body>
+
+</html>

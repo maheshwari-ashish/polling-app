@@ -23,9 +23,7 @@ from flask import Flask, request, render_template, g, redirect, Response
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
-
-
-# XXX: The Database URI should be in the format of: 
+# XXX: The Database URI should be in the format of:
 #
 #     postgresql://USER:PASSWORD@<IP_OF_POSTGRE_SQL_SERVER>/<DB_NAME>
 #
@@ -36,19 +34,18 @@ app = Flask(__name__, template_folder=tmpl_dir)
 # For your convenience, we already set it to the class database
 
 # Use the DB credentials you received by e-mail
-DB_USER = "YOUR_DB_USERNAME_HERE"
-DB_PASSWORD = "YOUR_DB_PASSWORD_HERE"
+DB_USER = "ashish.maheshwari"
+DB_PASSWORD = ""
 
-DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
+# DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
+DB_SERVER = "127.0.0.1"
 
-DATABASEURI = "postgresql://"+DB_USER+":"+DB_PASSWORD+"@"+DB_SERVER+"/w4111"
-
+DATABASEURI = "postgresql://" + DB_USER + ":" + DB_PASSWORD + "@" + DB_SERVER + "/w4111"
 
 #
 # This line creates a database engine that knows how to connect to the URI above
 #
 engine = create_engine(DATABASEURI)
-
 
 # Here we create a test table and insert some values in it
 engine.execute("""DROP TABLE IF EXISTS test;""")
@@ -59,33 +56,34 @@ engine.execute("""CREATE TABLE IF NOT EXISTS test (
 engine.execute("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');""")
 
 
-
 @app.before_request
 def before_request():
-  """
-  This function is run at the beginning of every web request 
-  (every time you enter an address in the web browser).
-  We use it to setup a database connection that can be used throughout the request
+    """
+    This function is run at the beginning of every web request
+    (every time you enter an address in the web browser).
+    We use it to setup a database connection that can be used throughout the request
 
-  The variable g is globally accessible
-  """
-  try:
-    g.conn = engine.connect()
-  except:
-    print "uh oh, problem connecting to database"
-    import traceback; traceback.print_exc()
-    g.conn = None
+    The variable g is globally accessible
+    """
+    try:
+        g.conn = engine.connect()
+    except:
+        print "uh oh, problem connecting to database"
+        import traceback;
+        traceback.print_exc()
+        g.conn = None
+
 
 @app.teardown_request
 def teardown_request(exception):
-  """
-  At the end of the web request, this makes sure to close the database connection.
-  If you don't the database could run out of memory!
-  """
-  try:
-    g.conn.close()
-  except Exception as e:
-    pass
+    """
+    At the end of the web request, this makes sure to close the database connection.
+    If you don't the database could run out of memory!
+    """
+    try:
+        g.conn.close()
+    except Exception as e:
+        pass
 
 
 #
@@ -103,63 +101,62 @@ def teardown_request(exception):
 #
 @app.route('/')
 def index():
-  """
-  request is a special object that Flask provides to access web request information:
+    """
+    request is a special object that Flask provides to access web request information:
 
-  request.method:   "GET" or "POST"
-  request.form:     if the browser submitted a form, this contains the data in the form
-  request.args:     dictionary of URL arguments e.g., {a:1, b:2} for http://localhost?a=1&b=2
+    request.method:   "GET" or "POST"
+    request.form:     if the browser submitted a form, this contains the data in the form
+    request.args:     dictionary of URL arguments e.g., {a:1, b:2} for http://localhost?a=1&b=2
 
-  See its API: http://flask.pocoo.org/docs/0.10/api/#incoming-request-data
-  """
+    See its API: http://flask.pocoo.org/docs/0.10/api/#incoming-request-data
+    """
 
-  # DEBUG: this is debugging code to see what request looks like
-  print request.args
+    # DEBUG: this is debugging code to see what request looks like
+    print request.args
 
+    #
+    # example of a database query
+    #
+    cursor = g.conn.execute("SELECT name FROM test")
+    names = []
+    for result in cursor:
+        names.append(result['name'])  # can also be accessed using result[0]
+    cursor.close()
 
-  #
-  # example of a database query
-  #
-  cursor = g.conn.execute("SELECT name FROM test")
-  names = []
-  for result in cursor:
-    names.append(result['name'])  # can also be accessed using result[0]
-  cursor.close()
+    #
+    # Flask uses Jinja templates, which is an extension to HTML where you can
+    # pass data to a template and dynamically generate HTML based on the data
+    # (you can think of it as simple PHP)
+    # documentation: https://realpython.com/blog/python/primer-on-jinja-templating/
+    #
+    # You can see an example template in templates/index.html
+    #
+    # context are the variables that are passed to the template.
+    # for example, "data" key in the context variable defined below will be
+    # accessible as a variable in index.html:
+    #
+    #     # will print: [u'grace hopper', u'alan turing', u'ada lovelace']
+    #     <div>{{data}}</div>
+    #
+    #     # creates a <div> tag for each element in data
+    #     # will print:
+    #     #
+    #     #   <div>grace hopper</div>
+    #     #   <div>alan turing</div>
+    #     #   <div>ada lovelace</div>
+    #     #
+    #     {% for n in data %}
+    #     <div>{{n}}</div>
+    #     {% endfor %}
+    #
+    context = dict(data=names)
 
-  #
-  # Flask uses Jinja templates, which is an extension to HTML where you can
-  # pass data to a template and dynamically generate HTML based on the data
-  # (you can think of it as simple PHP)
-  # documentation: https://realpython.com/blog/python/primer-on-jinja-templating/
-  #
-  # You can see an example template in templates/index.html
-  #
-  # context are the variables that are passed to the template.
-  # for example, "data" key in the context variable defined below will be 
-  # accessible as a variable in index.html:
-  #
-  #     # will print: [u'grace hopper', u'alan turing', u'ada lovelace']
-  #     <div>{{data}}</div>
-  #     
-  #     # creates a <div> tag for each element in data
-  #     # will print: 
-  #     #
-  #     #   <div>grace hopper</div>
-  #     #   <div>alan turing</div>
-  #     #   <div>ada lovelace</div>
-  #     #
-  #     {% for n in data %}
-  #     <div>{{n}}</div>
-  #     {% endfor %}
-  #
-  context = dict(data = names)
+    #
+    # render_template looks in the templates/ folder for files.
+    # for example, the below file reads template/index.html
+    #
+    return render_template("index.html", **context)
 
-
-  #
-  # render_template looks in the templates/ folder for files.
-  # for example, the below file reads template/index.html
-  #
-  return render_template("index.html", **context)
 
 #
 # This is an example of a different path.  You can see it at
@@ -169,51 +166,232 @@ def index():
 # notice that the functio name is another() rather than index()
 # the functions for each app.route needs to have different names
 #
-@app.route('/another')
-def another():
-  return render_template("anotherfile.html")
+# @app.route('/another')
+# def another():
+#     return render_template("anotherfile.html")
 
 
 # Example of adding new data to the database
-@app.route('/add', methods=['POST'])
-def add():
-  name = request.form['name']
-  print name
-  cmd = 'INSERT INTO test(name) VALUES (:name1), (:name2)';
-  g.conn.execute(text(cmd), name1 = name, name2 = name);
-  return redirect('/')
+# @app.route('/add', methods=['POST'])
+# def add():
+#     name = request.form['name']
+#     # print name
+#     cmd = 'INSERT INTO test(name) VALUES (:name1), (:name2)'
+#     g.conn.execute(text(cmd), name1=name, name2=name)
+#     return redirect('/')
 
 
-@app.route('/login')
-def login():
-    abort(401)
-    this_is_never_executed()
+@app.route('/users')
+def users():
+    cmd = ''' SELECT * FROM users '''
+    cur = g.conn.execute(text(cmd))
+    users = []
+    for row in cur:
+        users.append(row)
+    context = dict(data=users, cols=cur.keys())
+    return render_template("users.html", **context)
+
+
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    name = request.form['name']
+    email = request.form['email']
+    status = request.form['status']
+    cmd = ''' INSERT INTO users (name, email, status) VALUES (:name, :email, :status) RETURNING u_id '''
+    cur = g.conn.execute(text(cmd), name=name, email=email, status=status)
+    u_id = cur.fetchone()[0]
+    # print "user added with id: ", u_id
+    return redirect('/')
+
+
+@app.route('/new_presentation')
+def new_presentation():
+    return render_template("new_presentation.html")
+
+
+@app.route('/add_presentation', methods=['POST'])
+def add_presentation():
+    # print "new presentation function reached..."
+    pr_name = request.form['pr_name']
+    pr_desc = request.form['pr_desc']
+
+    cmd = ''' INSERT INTO presentation (pr_name, pr_description) VALUES (:pr_name, :pr_description) RETURNING pr_id '''
+    cur = g.conn.execute(text(cmd), pr_name=pr_name, pr_description=pr_desc)
+    pr_id = cur.fetchone()[0]
+    # print "presentation inserted with id: ", pr_id
+    return redirect('/')
+
+
+# @app.route('/show_presentations')
+# def show_presentations():
+#     return render_template("show_presentations.html")
+
+
+@app.route('/show_presentations')
+def show_presentations():
+    cmd = ''' SELECT * FROM presentation '''
+    cur = g.conn.execute(text(cmd))
+    pr_data = []
+    for row in cur:
+        pr_data.append(row)
+    context = dict(data=pr_data, cols=cur.keys())
+    return render_template("show_presentations.html", **context)
+
+
+@app.route('/fetch_pr_polls', methods=['POST'])
+def fetch_pr_polls():
+    pr_id = request.form['pr_id']
+    cmd = ''' SELECT * FROM poll WHERE pr_id = :pr_id '''
+    cur = g.conn.execute(text(cmd), pr_id=pr_id)
+    polls = []
+    for row in cur:
+        polls.append(row)
+    context = dict(pr_data=polls, pr_cols=cur.keys())
+    return render_template("show_presentations.html", **context)
+
+
+@app.route('/new_poll')
+def new_poll():
+    return render_template("new_poll.html")
+
+
+@app.route('/add_poll', methods=['POST'])
+def add_poll():
+    # print "new poll function reached..."
+    question = request.form['question']
+    presentation = request.form['presentation']
+    type = request.form['type']
+    option1 = request.form['option1']
+    option2 = request.form['option2']
+    option3 = request.form['option3']
+    option4 = request.form['option4']
+    options = [option1, option2, option3, option4]
+
+    cmd = ''' SELECT pr_id FROM presentation WHERE pr_name = :name '''
+    cur = g.conn.execute(text(cmd), name=presentation)
+    presentation_id = 0
+    for row in cur:
+        presentation_id = row[0]
+    # print presentation_id
+
+    cmd = ''' INSERT INTO poll (pr_id, poll_question, poll_type) VALUES (:pr_id, :poll_question, :poll_type) RETURNING poll_id '''
+    cur = g.conn.execute(text(cmd), pr_id=presentation_id, poll_question=question, poll_type=type)
+    poll_id = cur.fetchone()[0]
+    print "poll inserted with id: ", poll_id
+    for i, option in zip(range(len(options)), options):
+        add_poll_option(poll_id, i+1, option)
+    return redirect('/')
+
+
+def add_poll_option(poll_id, option_id, option_desc):
+    # print "add_poll_option"
+    # print "poll_id type: ", type(poll_id)
+    # print "option_id type: ", type(option_id)
+    # print "option_desc type: ", type(option_desc)
+    cmd = ''' INSERT INTO poll_options (poll_id, option_id, option_desc) VALUES (:poll_id, :option_id, :option_desc) '''
+    cur = g.conn.execute(text(cmd), poll_id=int(poll_id), option_id=int(option_id), option_desc=option_desc)
+
+
+@app.route('/vote')
+def vote():
+    cmd = ''' SELECT * FROM poll '''
+    cur = g.conn.execute(text(cmd))
+    polls = []
+    for row in cur:
+        polls.append(row)
+    # print "\nall fetched polls: \n"
+    # print polls
+    context = dict(data=polls, cols=cur.keys()[:-3])
+    return render_template("vote.html", **context)
+
+
+@app.route('/fetch_poll_options', methods=['POST'])
+def fetch_poll_options():
+    poll_id = request.form['poll_id']
+    cmd = ''' SELECT * FROM poll_options WHERE poll_id = :poll_id '''
+    cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    poll_options = []
+    for row in cur:
+        poll_options.append(row)
+    context = dict(options_data=poll_options, option_cols=cur.keys())
+    return render_template("vote.html", **context)
+
+
+@app.route('/vote_on_poll', methods=['POST'])
+def vote_on_poll():
+    poll_id = request.form['poll_id']
+    u_id = request.form['u_id']
+    option_id = request.form['option_id']
+
+    cmd = ''' SELECT poll_type FROM poll WHERE poll_id = :poll_id '''
+    cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    poll_type = cur.fetchone()[0]
+    # print "\npoll type returned: ", poll_type
+
+    if poll_type == 'scq':
+        cmd = ''' INSERT INTO votes_scq (poll_id, u_id, option_id) VALUES (:poll_id, :u_id, :option_id) RETURNING poll_id '''
+    else:
+        cmd = ''' INSERT INTO votes_mcq (poll_id, u_id, option_id) VALUES (:poll_id, :u_id, :option_id) RETURNING poll_id '''
+    cur = g.conn.execute(text(cmd), poll_id=poll_id, u_id=u_id, option_id=option_id)
+    # print "poll_id returned after voting: ", cur.fetchone()[0]
+    return redirect('/')
+
+
+@app.route('/results')
+def results():
+    return render_template("results.html")
+
+
+@app.route('/poll_results', methods=['POST'])
+def poll_results():
+    poll_id = request.form['poll_id']
+    cmd = ''' SELECT poll_type FROM poll WHERE poll_id = :poll_id '''
+    cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    poll_type = cur.fetchone()[0]
+
+    if poll_type == 'scq':
+        cmd = ''' SELECT * FROM votes_scq WHERE poll_id = :poll_id '''
+    else:
+        cmd = ''' SELECT * FROM votes_mcq WHERE poll_id = :poll_id '''
+    cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    votes = []
+    for row in cur:
+        votes.append(row)
+    context = dict(votes_data=votes, votes_cols=cur.keys())
+    return render_template("results.html", **context)
+
+
+# @app.route('/login')
+# def login():
+#     abort(401)
+#     this_is_never_executed()
 
 
 if __name__ == "__main__":
-  import click
-
-  @click.command()
-  @click.option('--debug', is_flag=True)
-  @click.option('--threaded', is_flag=True)
-  @click.argument('HOST', default='0.0.0.0')
-  @click.argument('PORT', default=8111, type=int)
-  def run(debug, threaded, host, port):
-    """
-    This function handles command line parameters.
-    Run the server using
-
-        python server.py
-
-    Show the help text using
-
-        python server.py --help
-
-    """
-
-    HOST, PORT = host, port
-    print "running on %s:%d" % (HOST, PORT)
-    app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
+    import click
 
 
-  run()
+    @click.command()
+    @click.option('--debug', is_flag=True)
+    @click.option('--threaded', is_flag=True)
+    @click.argument('HOST', default='0.0.0.0')
+    @click.argument('PORT', default=8111, type=int)
+    def run(debug, threaded, host, port):
+        """
+        This function handles command line parameters.
+        Run the server using
+
+            python server.py
+
+        Show the help text using
+
+            python server.py --help
+
+        """
+
+        HOST, PORT = host, port
+        print "running on %s:%d" % (HOST, PORT)
+        app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
+
+
+    run()

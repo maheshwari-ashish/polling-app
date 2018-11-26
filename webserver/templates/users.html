@@ -1,0 +1,38 @@
+<html>
+    <style>
+        body {
+        font-size: 15pt;
+        font-family: arial;
+        }
+    </style>
+
+<body>
+    <u><h3>Users</h3></u>
+    <h4>Registered Users:</h4>
+    <table>
+        <tr>
+            {% for col in cols %}
+            <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+
+        {% for row in data %}
+            <tr>
+                {% for item in row %}
+                    <td>{{ item }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h4>Add a new user:</h4>
+    <form method="POST" action="/add_user">
+        <p>Enter user's name: <input type="text" name="name"></p>
+        <p>Enter user's email: <input type="text" name="email"></p>
+        <p>Enter user's status (enabled/disabled): <input type="text" name="status"></p>
+        <p><input type="submit" value="Submit"></p>
+    </form>
+
+</body>
+
+</html>

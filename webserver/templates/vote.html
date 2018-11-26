@@ -1,0 +1,67 @@
+<html>
+    <style>
+        body {
+        font-size: 15pt;
+        font-family: arial;
+        }
+    </style>
+
+<body>
+    <u><h3>Vote On A Poll</h3></u>
+
+    <h4>Available polls to vote on are:</h4>
+{#    <div>{{cols}}</div></br></br>#}
+{#    <div>{{data}}</div></br></br>#}
+    <table>
+        <tr>
+            {% for col in cols %}
+            <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+
+        {% for row in data %}
+            <tr>
+                {% for item in row[:-3] %}
+                    <td>{{ item }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h4>Choose a poll id to view it's options:</h4>
+    <form method="POST" action="/fetch_poll_options">
+        <p>Enter poll id: <input type="text" name="poll_id"></p>
+        <p><input type="submit" value="Submit"></p>
+    </form>
+
+    {% if options_data|length > 0 %}
+        <h4>Options for selected poll are:</h4>
+        <table>
+            <tr>
+                {% for col in option_cols %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for row in options_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+
+        <h4>Cast your vote:</h4>
+        <form method="POST" action="/vote_on_poll">
+            Note: Make sure user is registered for this poll's presentation before trying to vote!
+            <p>Enter poll id: <input type="text" name="poll_id"></p>
+            <p>Enter your user id: <input type="text" name="u_id"></p>
+            <p>Enter option id to vote for: <input type="text" name="option_id"></p>
+            <p><input type="submit" value="Submit"></p>
+        </form>
+    {% endif %}
+
+</body>
+
+</html>
