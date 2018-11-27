@@ -1,0 +1,89 @@
+<html>
+    <style>
+        body {
+        font-size: 15pt;
+        font-family: arial;
+        }
+    </style>
+
+<body>
+    <u><h3>Some statistics calculated on the poll data!</h3></u>
+    <p>1. Count of each answer where poll type is MCQ -</p>
+    {% if q1_data|length > 0 %}
+        <table>
+            <tr>
+                {% for col in q1_cols %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for row in q1_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <p>2. Users who have voted in all presentations where user ‘1’ is the owner along with number of polls they have voted on -</p>
+    {% if q2_data|length > 0 %}
+        <table>
+            <tr>
+                {% for col in q2_cols %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for row in q2_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <p>3. The minimum, maximum and average rating of rating type questions - </p>
+    {% if q3_data|length > 0 %}
+        <table>
+            <tr>
+                {% for col in q3_cols %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for row in q3_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    <p>4. All users from Columbia University - </p>
+    {% if q4_data|length > 0 %}
+        <table>
+            <tr>
+                {% for col in q4_cols %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for row in q4_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+</body>
+
+</html>

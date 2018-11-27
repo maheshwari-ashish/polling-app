@@ -228,6 +228,32 @@ def add_presentation():
     return redirect('/')
 
 
+@app.route('/add_owner', methods=['POST'])
+def add_owner():
+    pr_id = request.form['pr_id']
+    u_id = request.form['u_id']
+
+    cmd = ''' INSERT INTO presentation_owner (u_id, pr_id) VALUES (:u_id, :pr_id) '''
+    try:
+        cur = g.conn.execute(text(cmd), u_id=u_id, pr_id=pr_id)
+    except Exception as e:
+        print e
+    return redirect('/')
+
+
+@app.route('/add_participant', methods=['POST'])
+def add_participant():
+    pr_id = request.form['pr_id']
+    u_id = request.form['u_id']
+
+    cmd = ''' INSERT INTO presentation_participant (u_id, pr_id) VALUES (:u_id, :pr_id) '''
+    try:
+        cur = g.conn.execute(text(cmd), u_id=u_id, pr_id=pr_id)
+    except Exception as e:
+        print e
+    return redirect('/')
+
+
 # @app.route('/show_presentations')
 # def show_presentations():
 #     return render_template("show_presentations.html")
@@ -398,6 +424,77 @@ def poll_results():
         votes.append(row)
     context = dict(votes_data=votes, votes_cols=cur.keys())
     return render_template("results.html", **context)
+
+
+@app.route('/stats')
+def stats():
+    cmd = ''' SELECT p.poll_question, o.option_desc, COUNT(*)
+              FROM Poll p, Votes_Mcq v, Poll_Options o
+              WHERE p.poll_type = 'mcq' AND p.poll_id = v.poll_id AND o.option_id = v.option_id AND o.poll_id = p.poll_id
+              GROUP BY o.option_desc, p.poll_question, p.poll_id
+              ORDER BY p.poll_id; '''
+    try:
+        cur = g.conn.execute(text(cmd))
+    except Exception as e:
+        print e
+        return redirect('/')
+    q1_data = []
+    for row in cur:
+        q1_data.append(row)
+    q1_cols = cur.keys()
+
+    cmd = ''' WITH optionids (opt_id) AS ( 
+              SELECT pop.option_id FROM Poll_Options pop WHERE poll_id IN (
+                SELECT p.poll_id FROM Poll p WHERE p.pr_id IN (
+                  SELECT po.pr_id FROM Presentation_Owner po WHERE po.u_id = 1
+                  )
+                )
+              )
+              SELECT u.name, COUNT(*) FROM (
+                SELECT poll_id, u_id FROM Votes_Scq WHERE option_id IN (
+                  SELECT opt_id FROM optionids)
+                  UNION
+                  SELECT poll_id, u_id FROM Votes_Mcq WHERE option_id IN 
+                  (SELECT opt_id FROM optionids)
+                ) AS tmp, Users as u
+                WHERE u.u_id = tmp.u_id
+                GROUP BY u.name; '''
+    try:
+        cur = g.conn.execute(text(cmd))
+    except Exception as e:
+        print e
+        return redirect('/')
+    q2_data = []
+    for row in cur:
+        q2_data.append(row)
+    q2_cols = cur.keys()
+
+    cmd = ''' SELECT min(p.option_desc), max(p.option_desc), avg(p.option_desc::int) FROM VOTES_SCQ v, poll_options p where v.option_id in (
+              SELECT po.option_id FROM poll_options po where poll_id = 9) and p.poll_id = v.poll_id and p.option_id = v.option_id; '''
+    try:
+        cur = g.conn.execute(text(cmd))
+    except Exception as e:
+        print e
+        return redirect('/')
+    q3_data = []
+    for row in cur:
+        q3_data.append(row)
+    q3_cols = cur.keys()
+
+    cmd = ''' SELECT name FROM Users WHERE email LIKE '%columbia%'; '''
+    try:
+        cur = g.conn.execute(text(cmd))
+    except Exception as e:
+        print e
+        return redirect('/')
+    q4_data = []
+    for row in cur:
+        q4_data.append(row)
+    q4_cols = cur.keys()
+
+    context = dict(q1_data=q1_data, q1_cols=q1_cols, q2_data=q2_data, q2_cols=q2_cols, q3_data=q3_data, q3_cols=q3_cols,
+                   q4_data=q4_data, q4_cols=q4_cols)
+    return render_template("stats.html", **context)
 
 
 # @app.route('/login')
