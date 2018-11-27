@@ -60,6 +60,10 @@
             <p>Enter option id to vote for: <input type="text" name="option_id"></p>
             <p><input type="submit" value="Submit"></p>
         </form>
+    {% else %}
+        {% if data|length == 0 %}
+            <h4>This poll doesn't exist!</h4>
+        {% endif %}
     {% endif %}
 
 </body>

@@ -198,8 +198,11 @@ def add_user():
     email = request.form['email']
     status = request.form['status']
     cmd = ''' INSERT INTO users (name, email, status) VALUES (:name, :email, :status) RETURNING u_id '''
-    cur = g.conn.execute(text(cmd), name=name, email=email, status=status)
-    u_id = cur.fetchone()[0]
+    try:
+        cur = g.conn.execute(text(cmd), name=name, email=email, status=status)
+    except Exception as e:
+        print e
+    # u_id = cur.fetchone()[0]
     # print "user added with id: ", u_id
     return redirect('/')
 
@@ -216,8 +219,11 @@ def add_presentation():
     pr_desc = request.form['pr_desc']
 
     cmd = ''' INSERT INTO presentation (pr_name, pr_description) VALUES (:pr_name, :pr_description) RETURNING pr_id '''
-    cur = g.conn.execute(text(cmd), pr_name=pr_name, pr_description=pr_desc)
-    pr_id = cur.fetchone()[0]
+    try:
+        cur = g.conn.execute(text(cmd), pr_name=pr_name, pr_description=pr_desc)
+    except Exception as e:
+        print e
+    # pr_id = cur.fetchone()[0]
     # print "presentation inserted with id: ", pr_id
     return redirect('/')
 
@@ -242,7 +248,11 @@ def show_presentations():
 def fetch_pr_polls():
     pr_id = request.form['pr_id']
     cmd = ''' SELECT * FROM poll WHERE pr_id = :pr_id '''
-    cur = g.conn.execute(text(cmd), pr_id=pr_id)
+    try:
+        cur = g.conn.execute(text(cmd), pr_id=pr_id)
+    except Exception as e:
+        print e
+        return redirect('/')
     polls = []
     for row in cur:
         polls.append(row)
@@ -267,15 +277,26 @@ def add_poll():
     option4 = request.form['option4']
     options = [option1, option2, option3, option4]
 
+    if len(question) == 0:
+        print "Error: Question field was left blank. Poll not added."
+        return redirect('/')
+
     cmd = ''' SELECT pr_id FROM presentation WHERE pr_name = :name '''
     cur = g.conn.execute(text(cmd), name=presentation)
-    presentation_id = 0
+    presentation_id = -1
     for row in cur:
         presentation_id = row[0]
     # print presentation_id
+    if presentation_id == -1:
+        print "Error: no presentation found with name:", presentation
+        return redirect('/')
 
     cmd = ''' INSERT INTO poll (pr_id, poll_question, poll_type) VALUES (:pr_id, :poll_question, :poll_type) RETURNING poll_id '''
-    cur = g.conn.execute(text(cmd), pr_id=presentation_id, poll_question=question, poll_type=type)
+    try:
+        cur = g.conn.execute(text(cmd), pr_id=presentation_id, poll_question=question, poll_type=type)
+    except Exception as e:
+        print e
+        return redirect('/')
     poll_id = cur.fetchone()[0]
     print "poll inserted with id: ", poll_id
     for i, option in zip(range(len(options)), options):
@@ -309,7 +330,11 @@ def vote():
 def fetch_poll_options():
     poll_id = request.form['poll_id']
     cmd = ''' SELECT * FROM poll_options WHERE poll_id = :poll_id '''
-    cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    try:
+        cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    except Exception as e:
+        print e
+        return redirect('/')
     poll_options = []
     for row in cur:
         poll_options.append(row)
@@ -332,7 +357,11 @@ def vote_on_poll():
         cmd = ''' INSERT INTO votes_scq (poll_id, u_id, option_id) VALUES (:poll_id, :u_id, :option_id) RETURNING poll_id '''
     else:
         cmd = ''' INSERT INTO votes_mcq (poll_id, u_id, option_id) VALUES (:poll_id, :u_id, :option_id) RETURNING poll_id '''
-    cur = g.conn.execute(text(cmd), poll_id=poll_id, u_id=u_id, option_id=option_id)
+    try:
+        cur = g.conn.execute(text(cmd), poll_id=poll_id, u_id=u_id, option_id=option_id)
+    except Exception as e:
+        print e
+        return redirect('/')
     # print "poll_id returned after voting: ", cur.fetchone()[0]
     return redirect('/')
 
@@ -346,14 +375,24 @@ def results():
 def poll_results():
     poll_id = request.form['poll_id']
     cmd = ''' SELECT poll_type FROM poll WHERE poll_id = :poll_id '''
-    cur = g.conn.execute(text(cmd), poll_id=poll_id)
-    poll_type = cur.fetchone()[0]
+    try:
+        cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    except Exception as e:
+        print e
+        return redirect('/')
+    poll_type = cur.fetchone()
+    if poll_type is not None:
+        poll_type = poll_type[0]
 
     if poll_type == 'scq':
         cmd = ''' SELECT * FROM votes_scq WHERE poll_id = :poll_id '''
     else:
         cmd = ''' SELECT * FROM votes_mcq WHERE poll_id = :poll_id '''
-    cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    try:
+        cur = g.conn.execute(text(cmd), poll_id=poll_id)
+    except Exception as e:
+        print e
+        return redirect('/')
     votes = []
     for row in cur:
         votes.append(row)

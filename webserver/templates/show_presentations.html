@@ -30,22 +30,27 @@
         <p><input type="submit" value="Submit"></p>
     </form>
 
-    <h4>Polls inside the chosen presentation are:</h4>
-    <table>
-        <tr>
-            {% for col in pr_cols %}
-            <th>{{ col }}</th>
-            {% endfor %}
-        </tr>
-
-        {% for row in pr_data %}
+    {% if pr_data|length > 0 %}
+        <h4>Polls inside the chosen presentation are:</h4>
+        <table>
             <tr>
-                {% for item in row %}
-                    <td>{{ item }}</td>
+                {% for col in pr_cols %}
+                <th>{{ col }}</th>
                 {% endfor %}
             </tr>
-        {% endfor %}
-    </table>
+
+            {% for row in pr_data %}
+                <tr>
+                    {% for item in row %}
+                        <td>{{ item }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <h4>No polls available in chosen presentation!</h4>
+    {% endif %}
+
 
 </body>
 
