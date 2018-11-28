@@ -29,7 +29,13 @@
     <form method="POST" action="/add_user">
         <p>Enter user's name: <input type="text" name="name"></p>
         <p>Enter user's email: <input type="text" name="email"></p>
-        <p>Enter user's status (enabled/disabled): <input type="text" name="status"></p>
+        <p>
+            Choose user's Status:
+            <select name="status">
+                <option value="enabled">enabled</option>
+                <option value="disabled">disabled</option>
+            </select>
+        </p>
         <p><input type="submit" value="Submit"></p>
     </form>
 

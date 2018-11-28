@@ -46,26 +46,26 @@
         </table>
     {% endif %}
 
-    <p>3. The minimum, maximum and average rating of rating type questions - </p>
-    {% if q3_data|length > 0 %}
-        <table>
-            <tr>
-                {% for col in q3_cols %}
-                <th>{{ col }}</th>
-                {% endfor %}
-            </tr>
+{#    <p>3. The minimum, maximum and average rating of rating type questions - </p>#}
+{#    {% if q3_data|length > 0 %}#}
+{#        <table>#}
+{#            <tr>#}
+{#                {% for col in q3_cols %}#}
+{#                <th>{{ col }}</th>#}
+{#                {% endfor %}#}
+{#            </tr>#}
+{##}
+{#            {% for row in q3_data %}#}
+{#                <tr>#}
+{#                    {% for item in row %}#}
+{#                        <td>{{ item }}</td>#}
+{#                    {% endfor %}#}
+{#                </tr>#}
+{#            {% endfor %}#}
+{#        </table>#}
+{#    {% endif %}#}
 
-            {% for row in q3_data %}
-                <tr>
-                    {% for item in row %}
-                        <td>{{ item }}</td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-        </table>
-    {% endif %}
-
-    <p>4. All users from Columbia University - </p>
+    <p>3. All users from Columbia University - </p>
     {% if q4_data|length > 0 %}
         <table>
             <tr>
